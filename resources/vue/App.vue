@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from "vue";
+import { useToast } from "vue-toastification";
 // array of 100 numbers
 let numbers = ref(Array.from({ length: 100 }, (v, k) => k));
 const getRandomNumber = () => {
@@ -25,12 +26,12 @@ const players = ref(
 );
 const current_player = ref(0);
 let current_player_number = ref(players.value[current_player.value].number);
-
+const toast = useToast();
 let last_opened = ref("");
 let started = ref(false);
 
 const player_scores = ref([]);
-let over = false;
+let over = ref(false);
 let attempts = ref(50);
 let box = ref(
   Array.from({ length: 100 }, (_, i) => ({
@@ -42,10 +43,9 @@ let box = ref(
 );
 
 const openBox = async (id, number) => {
-  console.log(id, number);
   if (attempts.value === 0) {
-    over = true;
-    alert("Game Over");
+    over.value = true;
+    toast.error("Game Over");
     window.location.reload();
     return;
   }
@@ -60,20 +60,21 @@ const openBox = async (id, number) => {
       found_in_attempt: attempts.value,
     });
 
-    if (current_player.value === players.value.length) {
-      over = true;
-      alert("Game Over - You Win");
-      return;
-    }
-    last_opened.value = "";
     current_player.value++;
+    last_opened.value = players.value[current_player.value].number;
     current_player_number.value = players.value[current_player.value].number;
     attempts.value = 50;
     console.log(attempts.value);
     box.value.forEach((item) => {
       item.opened = false;
     });
-    alert("You found the number");
+    toast.warning("You found the number");
+  }
+  if (current_player.value >= players.value.length) {
+    console.log(id, number);
+    over.value = true;
+    toast.success("Game Over - You Win");
+    return;
   }
 };
 
@@ -98,19 +99,26 @@ function paddingZeros(text, limit) {
   return num.padStart(limit, "0");
 }
 let counter = 0;
+const timer = (ms) => new Promise((res) => setTimeout(res, ms));
+
 async function start() {
+  started = true;
   if (counter === 0) {
     openBox(
       current_player_number.value,
       box.value[current_player_number.value].number
     );
     counter++;
+    start();
   } else {
-    openBox(last_opened.value, box.value[current_player_number.value].number);
     // console.log(
     //   last_opened.value,
     //   box.value[current_player_number.value].number
     // );
+    while (!over.value) {
+      await timer(50);
+      openBox(last_opened.value, box.value[last_opened.value].number);
+    }
   }
 }
 </script>
@@ -133,7 +141,8 @@ async function start() {
       <div
         class="text-2xl bg-white font-bold text-center color p-3 rounded-lg shadow-sm text-green-500"
       >
-        Player: {{ paddingZeros(current_player, 2) }} / 99
+        Player: {{ paddingZeros(current_player, 2) }} /
+        {{ players.length }}
       </div>
     </div>
 
