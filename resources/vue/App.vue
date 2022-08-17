@@ -19,7 +19,7 @@ const getRandomPlayerNumber = () => {
 const players = ref(
   Array.from({ length: 100 }, (v, k) => ({
     id: k,
-    name: `Player ${k + 1}`,
+    name: `Player ${k}`,
     number: getRandomPlayerNumber(),
   }))
 );
@@ -27,9 +27,10 @@ const current_player = ref(0);
 let current_player_number = ref(players.value[current_player.value].number);
 
 let last_opened = ref("");
+let started = ref(false);
 
 const player_scores = ref([]);
-
+let over = false;
 let attempts = ref(50);
 let box = ref(
   Array.from({ length: 100 }, (_, i) => ({
@@ -40,8 +41,10 @@ let box = ref(
   }))
 );
 
-const openBox = (id, number) => {
+const openBox = async (id, number) => {
+  console.log(id, number);
   if (attempts.value === 0) {
+    over = true;
     alert("Game Over");
     window.location.reload();
     return;
@@ -58,9 +61,11 @@ const openBox = (id, number) => {
     });
 
     if (current_player.value === players.value.length) {
+      over = true;
       alert("Game Over - You Win");
       return;
     }
+    last_opened.value = "";
     current_player.value++;
     current_player_number.value = players.value[current_player.value].number;
     attempts.value = 50;
@@ -88,6 +93,26 @@ const getClass = () => {
       return "text-green-500";
   }
 };
+function paddingZeros(text, limit) {
+  const num = text.toString();
+  return num.padStart(limit, "0");
+}
+let counter = 0;
+async function start() {
+  if (counter === 0) {
+    openBox(
+      current_player_number.value,
+      box.value[current_player_number.value].number
+    );
+    counter++;
+  } else {
+    openBox(last_opened.value, box.value[current_player_number.value].number);
+    // console.log(
+    //   last_opened.value,
+    //   box.value[current_player_number.value].number
+    // );
+  }
+}
 </script>
 
 <template>
@@ -103,12 +128,12 @@ const getClass = () => {
       <div
         class="text-2xl bg-white font-bold text-center color p-3 rounded-lg shadow-sm text-green-500"
       >
-        Number to find: {{ current_player_number + 1 }}
+        Number to find: {{ current_player_number }}
       </div>
       <div
         class="text-2xl bg-white font-bold text-center color p-3 rounded-lg shadow-sm text-green-500"
       >
-        Player: {{ current_player + 1 }}
+        Player: {{ paddingZeros(current_player, 2) }} / 99
       </div>
     </div>
 
@@ -124,12 +149,12 @@ const getClass = () => {
           @click="openBox(i, b.number)"
         >
           <span v-if="!b.opened">
-            {{ b.id + 1 }}
+            {{ b.id }}
           </span>
           <span v-else>
-            {{ b.number + 1 }}
+            {{ b.number }}
           </span>
-          <!-- <span class=""> ,{{ b.number + 1 }} </span> -->
+          <!-- <span class=""> ,{{ b.number }} </span> -->
         </div>
       </div>
       <div class="overflow-y-auto max-h-[80vh] score">
@@ -143,6 +168,16 @@ const getClass = () => {
           </li>
         </ul>
       </div>
+    </div>
+    <div class="d-flex justify-center w-100 text-center">
+      <button
+        class="bg-green-800 text-white font-bold py-2 px-4 rounded-lg shadow-sm"
+        @click="start()"
+        :disabled="started"
+        :class="{ 'bg-red-500': started }"
+      >
+        {{ started ? "Started" : "Start" }}
+      </button>
     </div>
   </div>
 </template>
