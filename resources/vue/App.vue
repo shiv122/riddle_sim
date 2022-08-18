@@ -102,7 +102,7 @@ let counter = 0;
 const timer = (ms) => new Promise((res) => setTimeout(res, ms));
 
 async function start() {
-  started = true;
+  started.value = true;
   if (counter === 0) {
     openBox(
       current_player_number.value,
@@ -116,7 +116,7 @@ async function start() {
     //   box.value[current_player_number.value].number
     // );
     while (!over.value) {
-      await timer(50);
+      await timer(100);
       openBox(last_opened.value, box.value[last_opened.value].number);
     }
   }
@@ -128,29 +128,31 @@ async function start() {
     <div class="flex justify-between items-center px-4 pt-2">
       <div
         :class="getClass()"
-        class="text-2xl bg-white font-bold text-center color p-3 rounded-lg shadow-sm"
+        class="text-l md:text-2xl bg-white font-bold text-center color p-1 mx-1 md:p-3 rounded-lg shadow-sm"
       >
         Attempt left:
         {{ attempts }}
       </div>
       <div
-        class="text-2xl bg-white font-bold text-center color p-3 rounded-lg shadow-sm text-green-500"
+        class="text-l md:text-2xl bg-white font-bold text-center color p-1 mx-1 md:p-3 rounded-lg shadow-sm text-green-500"
       >
         Number to find: {{ current_player_number }}
       </div>
       <div
-        class="text-2xl bg-white font-bold text-center color p-3 rounded-lg shadow-sm text-green-500"
+        class="text-l md:text-2xl bg-white font-bold text-center color p-1 mx-1 md:p-3 rounded-lg shadow-sm text-green-500"
       >
         Player: {{ paddingZeros(current_player, 2) }} /
         {{ players.length }}
       </div>
     </div>
 
-    <div class="flex items-center justify-around mt-10 h-[80vh]">
+    <div
+      class="flex items-center flex-col-reverse md:flex-row md:justify-around mt-20 gap-10 md:mt-10"
+    >
       <div class="grid grid-cols-10 md:grid-cols-10 lg:grid-cols-10 gap-2 p-3">
         <div
           v-for="(b, i) in box"
-          class="bg-green-100 text-lg font-bold text-center p-3 rounded-lg cursor-pointer hover:ring-2 hover:ring-orange-500"
+          class="bg-green-100 text-l md:text-lg font-bold text-center p-[5px] md:p-3 rounded-lg cursor-pointer hover:ring-2 hover:ring-orange-500"
           :class="[
             `${b.opened ? 'text-red-500' : 'text-green-500'}`,
             { 'bg-yellow-300 text-red-500': b.number === last_opened },
@@ -166,10 +168,15 @@ async function start() {
           <!-- <span class=""> ,{{ b.number }} </span> -->
         </div>
       </div>
-      <div class="overflow-y-auto max-h-[80vh] score">
-        <ul class="d-flex justify-center" v-for="(score, i) in player_scores">
+      <div
+        class="overflow-x-auto flex md:overflow-y-auto max-h-[80vh] max-w-[90vw] score"
+      >
+        <ul
+          class="d-flex min-w-[35vw] md:min-w-auto flex-row justify-center mx-1"
+          v-for="(score, i) in player_scores"
+        >
           <li
-            class="text-xl bg-white font-bold color p-3 rounded-lg shadow-sm w-fit mb-1"
+            class="text-l md:text-xl bg-white font-bold color p-1 md:p-3 rounded-lg shadow-sm w-fit mb-1"
           >
             Player : {{ score.player }}
             <br />
@@ -178,7 +185,7 @@ async function start() {
         </ul>
       </div>
     </div>
-    <div class="d-flex justify-center w-100 text-center">
+    <div class="flex absolute bottom-5 justify-center w-[100vw] text-center">
       <button
         class="bg-green-800 text-white font-bold py-2 px-4 rounded-lg shadow-sm"
         @click="start()"
